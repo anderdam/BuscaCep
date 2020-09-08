@@ -22,60 +22,19 @@ namespace BuscaCep.ViewModels
             }
         }
 
-        private string _Logradouro;
-        public string Logradouro
-        {
-            get => _Logradouro;
-            set
-            {
-                _Logradouro = value;
-                OnPropertyChanged();
-            }
-        }
+        private ViaCepDto _ViaCepDto = null;
 
-        private string _Complemento;
-        public string Complemento
-        {
-            get => _Complemento;
-            set
-            {
-                _Complemento = value;
-                OnPropertyChanged();
-            }
-        }
+        public bool HasCep { get => !(_ViaCepDto is null); }
 
-        private string _Bairro;
-        public string Bairro
-        {
-            get => _Bairro;
-            set
-            {
-                _Bairro = value;
-                OnPropertyChanged();
-            }
-        }
+        public string Logradouro {get => _ViaCepDto?.logradouro;}
 
-        private string _Localidade;
-        public string Localidade
-        {
-            get => _Localidade;
-            set
-            {
-                _Localidade = value;
-                OnPropertyChanged();
-            }
-        }
+        public string Complemento {get => _ViaCepDto?.complemento;}
 
-        private string _UF;
-        public string UF
-        {
-            get => _UF;
-            set
-            {
-                _UF = value;
-                OnPropertyChanged();
-            }
-        }
+        public string Bairro {get => _ViaCepDto?.bairro;}
+
+        public string Localidade {get => _ViaCepDto?.localidade;}
+
+        public string UF {get => _ViaCepDto?.uf;}
 
         private Command _BuscarCommand;
         public Command BuscarCommand
@@ -84,12 +43,18 @@ namespace BuscaCep.ViewModels
 
         private bool BuscarCommandCanExecute()
             => !string.IsNullOrWhiteSpace(CEP)
-            && CEP.Length == 8;
+            && CEP.Length == 8
+            && IsNotBusy;
 
         private async Task BuscarCommandExecute()
         {
             try
-            {                
+            {
+                if (IsBusy)
+                    return;
+
+                IsBusy = true;
+
                 using (var client = new HttpClient())
                 {
                     using (var response = await client.GetAsync($"https://viacep.com.br/ws/{CEP}/json/"))
@@ -101,22 +66,31 @@ namespace BuscaCep.ViewModels
                         if (string.IsNullOrWhiteSpace(content))
                             throw new InvalidOperationException();
 
-                        var retorno = JsonConvert.DeserializeObject<ViaCepDto>(content);
+                        _ViaCepDto = JsonConvert.DeserializeObject<ViaCepDto>(content);
 
-                        if (retorno.erro)
-                            throw new InvalidOperationException();
-
-                        Logradouro = retorno.logradouro;
-                        Complemento = retorno.complemento;
-                        Bairro = retorno.bairro;
-                        Localidade = retorno.localidade;
-                        UF = retorno.uf;
+                        if (_ViaCepDto.erro)
+                            throw new InvalidOperationException();                        
                     }
                 }
             }
             catch (Exception ex)
             {
+                _ViaCepDto = null;
+
                 await App.Current.MainPage.DisplayAlert("Ooops", "Algo de errado não deu certo", ex.Message);
+            }
+            finally
+            {
+                OnPropertyChanged(nameof(HasCep));
+                OnPropertyChanged(nameof(Logradouro));
+                OnPropertyChanged(nameof(Complemento));
+                OnPropertyChanged(nameof(Bairro));
+                OnPropertyChanged(nameof(Localidade));
+                OnPropertyChanged(nameof(UF));
+
+                IsBusy = false;
+
+                BuscarCommand.ChangeCanExecute();
             }
         }
     }
