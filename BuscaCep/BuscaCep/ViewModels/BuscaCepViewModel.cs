@@ -1,18 +1,21 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 
 namespace BuscaCep.ViewModels
 {
-    class BuscaCepViewModel : ViewModelBase
+    internal class BuscaCepViewModel : ViewModelBase
     {
+        public BuscaCepViewModel()
+        {
+        }
+
         private string _CEP;
-        public string CEP 
-        { 
+
+        public string CEP
+        {
             get => _CEP;
             set
             {
@@ -22,21 +25,22 @@ namespace BuscaCep.ViewModels
             }
         }
 
-        private ViaCepDto _ViaCepDto = null;
+        private CepDto _ViaCepDto = null;
 
         public bool HasCep { get => !(_ViaCepDto is null); }
 
-        public string Logradouro {get => _ViaCepDto?.logradouro;}
+        public string Logradouro { get => _ViaCepDto?.logradouro; }
 
-        public string Complemento {get => _ViaCepDto?.complemento;}
+        public string Complemento { get => _ViaCepDto?.complemento; }
 
-        public string Bairro {get => _ViaCepDto?.bairro;}
+        public string Bairro { get => _ViaCepDto?.bairro; }
 
-        public string Localidade {get => _ViaCepDto?.localidade;}
+        public string Localidade { get => _ViaCepDto?.localidade; }
 
-        public string UF {get => _ViaCepDto?.uf;}
+        public string UF { get => _ViaCepDto?.uf; }
 
         private Command _BuscarCommand;
+
         public Command BuscarCommand
             => _BuscarCommand ?? (_BuscarCommand = new Command(async () => await BuscarCommandExecute(),
                 () => BuscarCommandCanExecute()));
@@ -66,10 +70,10 @@ namespace BuscaCep.ViewModels
                         if (string.IsNullOrWhiteSpace(content))
                             throw new InvalidOperationException();
 
-                        _ViaCepDto = JsonConvert.DeserializeObject<ViaCepDto>(content);
+                        _ViaCepDto = JsonConvert.DeserializeObject<CepDto>(content);
 
                         if (_ViaCepDto.erro)
-                            throw new InvalidOperationException();                        
+                            throw new InvalidOperationException();
                     }
                 }
             }

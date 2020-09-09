@@ -12,7 +12,8 @@ namespace BuscaCep
             InitializeComponent();
 
             //MainPage = new MainPage();
-            MainPage = new BuscaCepPage();
+            //MainPage = new BuscaCepPage();
+            MainPage = new CepsPage();
         }
 
         protected override void OnStart()
